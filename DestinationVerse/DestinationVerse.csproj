@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DestinationVerse.Data\DestinationVerse.Data.csproj" />
+    <ProjectReference Include="..\DestinationVerse.Services\DestinationVerse.Services.csproj" />
   </ItemGroup>
 
 </Project>
