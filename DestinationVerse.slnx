@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DestinationVerse.Data/DestinationVerse.Data.csproj" Id="1ba7ee34-2752-4897-8b3b-325d130f5e08" />
+  <Project Path="DestinationVerse/DestinationVerse.csproj" />
+</Solution>
