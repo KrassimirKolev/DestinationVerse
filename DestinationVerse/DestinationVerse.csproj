@@ -15,4 +15,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.32" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DestinationVerse.Data\DestinationVerse.Data.csproj" />
+  </ItemGroup>
+
 </Project>

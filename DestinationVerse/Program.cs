@@ -16,9 +16,27 @@ namespace DestinationVerse
                 options.UseSqlServer(connectionString));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+            //builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            //    .AddEntityFrameworkStores<ApplicationDbContext>();
+            //builder.Services.AddControllersWithViews();
+
+            // 🛡️ Конфигуриране на оригиналния Identity с олекотени пароли            
+            builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+            {
+                // Изключваме потвърждението по имейл за лесно локално тестване
+                options.SignIn.RequireConfirmedAccount = false;
+
+                // Олекотяваме изискванията за пароли за изпита
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 3; // Паролата може да е само 3 символа
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
             builder.Services.AddControllersWithViews();
+
 
             var app = builder.Build();
 
