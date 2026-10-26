@@ -1,8 +1,11 @@
 ﻿@using DestinationVerse.Data.Entities
+@using System.Security.Claims
 @model Destination
 
 @{
     ViewData["Title"] = "Детайли за " + Model.Title;
+    // Извличаме ID на текущо логнатия потребител в уеб браузъра
+    string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 }
 
 <div class="row justify-content-center">
@@ -35,8 +38,20 @@
                 <div class="border-top pt-3 mt-4">
                     <p class="mb-2"><strong>📍 Регион:</strong> <span class="badge bg-secondary fs-6">@Model.Region.Name</span></p>
                     <p class="mb-3 text-muted"><strong>📅 Публикувано на:</strong> @Model.PublishedOn.ToString("dd MMMM yyyy г.")</p>
-                    <div class="d-flex gap-2">
-                        <a asp-controller="Destination" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100">✏️ Редактирай</a>
+
+                    <div class="d-flex flex-column gap-2">
+                        @if (Model.PublisherId == currentUserId)
+                        {
+                            <!-- Бутонът се вижда САМО ако текущият потребител е собственик -->
+                            <a asp-controller="Destination" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100 fw-bold">✏️ Редактирай</a>
+                        }
+                        else
+                        {
+                            <!-- Информативно съобщение за чужда дестинация -->
+                            <div class="alert alert-light border text-center p-2 mb-0 small text-muted">
+                                <em>Редакция на тази публикация може да се прави само от нейния автор.</em>
+                            </div>
+                        }
                         <a asp-controller="Destination" asp-action="Index" class="btn btn-outline-secondary w-100">Назад</a>
                     </div>
                 </div>
