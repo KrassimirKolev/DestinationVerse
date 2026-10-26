@@ -15,12 +15,13 @@ namespace DestinationVerse.Data
         public DbSet<Region> Regions { get; set; } = null!;
         public DbSet<Destination> Destinations { get; set; } = null!;
         public DbSet<UserDestination> UsersDestinations { get; set; } = null!;
+        public DbSet<Comment> Comments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // 1. Конфигурация на съставния ключ за междинната таблица
+            // 1. Конфигурация на съставния ключ за междинната таблица за любими
             builder.Entity<UserDestination>()
                 .HasKey(ud => new { ud.UserId, ud.DestinationId });
 
@@ -39,9 +40,12 @@ namespace DestinationVerse.Data
                 new Region { Id = 4, Name = "Стара Планина" }
             );
 
-            // 4. DATA SEEDING ЗА ПОТРЕБИТЕЛЯ: Заобикаляне на бъга с триъгълните скоби чрез typeof()
+            // 4. DATA SEEDING ЗА ПОТРЕБИТЕЛЯ И РОЛИТЕ (Чрез typeof за заобикаляне на бъга)
             string adminUserId = "admin-user-static-id-001";
+            string adminRoleId = "admin-role-static-id-001";
+            string userRoleId = "user-role-static-id-002";
 
+            // Сийдване на Администраторски потребител
             var adminUser = new IdentityUser
             {
                 Id = adminUserId,
@@ -52,11 +56,18 @@ namespace DestinationVerse.Data
                 EmailConfirmed = true,
                 SecurityStamp = "STATIC-SECURITY-STAMP-001",
                 ConcurrencyStamp = "STATIC-CONCURRENCY-STAMP-001",
-                PasswordHash = "AQAAAAIAAYagAAAAEGqP/Xb1vLfZ8J7gKq0uO4BvL6A==" // Хеширана парола "123"
+                PasswordHash = "AQAAAAIAAYagAAAAEGqP/Xb1vLfZ8J7gKq0uO4BvL6A==" // Парола "123"
             };
-
-            // Използваме изричен не-генеричен метод с typeof, за да заобиколим текстовия филтър на AI:
             builder.Entity(typeof(IdentityUser)).HasData(adminUser);
+
+            // Сийдване на системните роли
+            var adminRole = new IdentityRole { Id = adminRoleId, Name = "Administrator", NormalizedName = "ADMINISTRATOR" };
+            var userRole = new IdentityRole { Id = userRoleId, Name = "User", NormalizedName = "USER" };
+            builder.Entity(typeof(IdentityRole)).HasData(adminRole, userRole);
+
+            // Свързване на потребителя с ролята (User-Role Mapping)
+            var adminUserRole = new IdentityUserRole<string> { UserId = adminUserId, RoleId = adminRoleId };
+            builder.Entity(typeof(IdentityUserRole<string>)).HasData(adminUserRole);
 
             // 5. DATA SEEDING: Първоначални дестинации в системата
             builder.Entity<Destination>().HasData(
@@ -94,6 +105,19 @@ namespace DestinationVerse.Data
                     IsDeleted = false
                 }
             );
+
+            // 6. КОНФИГУРАЦИЯ НА КОМЕНТАРИТЕ: Защита срещу каскадни пътища
+            builder.Entity<Comment>()
+                .HasOne(c => c.Destination)
+                .WithMany()
+                .HasForeignKey(c => c.DestinationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Comment>()
+                .HasOne(c => c.Author)
+                .WithMany()
+                .HasForeignKey(c => c.AuthorId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
