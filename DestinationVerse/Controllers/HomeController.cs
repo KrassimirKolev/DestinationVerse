@@ -15,8 +15,16 @@ namespace DestinationVerse.Controllers
 
         public IActionResult Index()
         {
+            // Ако потребителят е влязъл в профила си, Home автоматично го праща директно при дестинациите
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction("Index", "Destination");
+            }
+
+            // Ако е гост, вижда стандартната начална заглавна страница
             return View();
         }
+
 
         public IActionResult Privacy()
         {
