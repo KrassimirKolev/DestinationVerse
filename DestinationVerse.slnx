@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="DestinationVerse.Data/DestinationVerse.Data.csproj" Id="1ba7ee34-2752-4897-8b3b-325d130f5e08" />
   <Project Path="DestinationVerse.Services/DestinationVerse.Services.csproj" Id="6bac4fb9-c4f1-483e-a7f6-f4964c8ec8df" />
   <Project Path="DestinationVerse/DestinationVerse.csproj" />
