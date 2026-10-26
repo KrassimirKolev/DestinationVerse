@@ -99,14 +99,16 @@ namespace DestinationVerse.Controllers
             var destination = await destinationService.GetDestinationByIdAsync(id);
             if (destination == null)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Дестинацията не е намерена.";
+                return RedirectToAction(nameof(Index));
             }
 
-            // СЪРВЪРНА ЗАЩИТА: Само авторът може да отвори тази форма
+            // ИНТЕЛИГЕНТНА ЗАЩИТА: Записваме съобщение в TempData и връщаме потребителя обратно
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             if (destination.PublisherId != userId)
             {
-                return Unauthorized(); // Предотвратява неоторизиран достъп през URL адреса
+                TempData["ErrorMessage"] = "Нямате права за редакция на чужда дестинация!";
+                return RedirectToAction(nameof(Index));
             }
 
             var regions = await regionService.GetAllRegionsAsync();
@@ -134,25 +136,23 @@ namespace DestinationVerse.Controllers
             if (!ModelState.IsValid)
             {
                 var regions = await regionService.GetAllRegionsAsync();
-                model.Regions = regions.Select(r => new ViewModels.Destination.RegionSelectViewModel()
-                {
-                    Id = r.Id,
-                    Name = r.Name
-                });
+                model.Regions = regions.Select(r => new ViewModels.Destination.RegionSelectViewModel() { Id = r.Id, Name = r.Name });
                 return View(model);
             }
 
             var destination = await destinationService.GetDestinationByIdAsync(id);
             if (destination == null)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Дестинацията не е намерена.";
+                return RedirectToAction(nameof(Index));
             }
 
-            // СЪРВЪРНА ЗАЩИТА: Валидация на авторството преди запис в SQL Server
+            // ИНТЕЛИГЕНТНА ЗАЩИТА ПРИ ЗАПИС
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             if (destination.PublisherId != userId)
             {
-                return Unauthorized();
+                TempData["ErrorMessage"] = "Нямате права за модифициране на чужда дестинация!";
+                return RedirectToAction(nameof(Index));
             }
 
             destination.Title = model.Title;
@@ -161,9 +161,9 @@ namespace DestinationVerse.Controllers
             destination.RegionId = model.RegionId;
 
             await destinationService.UpdateDestinationAsync(destination);
+            TempData["SuccessMessage"] = "Дестинацията е обновена успешно.";
             return RedirectToAction(nameof(Index));
         }
-
 
         // 7. GET екшън: Извежда личната колекция на потребителя („Моят Пътеводител“)
         [HttpGet]
@@ -260,14 +260,27 @@ namespace DestinationVerse.Controllers
             return RedirectToAction(nameof(Create));
         }
 
-        // ❌ 10. POST екшън: Сигурно изтриване (Soft Delete) на дестинация
+        // 10. POST екшън: Сигурно изтриване (Soft Delete) на дестинация само за нейния автор!
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            // Извикваме бизнес логиката от сървиса (която задава IsDeleted = true)
-            await destinationService.DeleteDestinationAsync(id);
+            var destination = await destinationService.GetDestinationByIdAsync(id);
+            if (destination == null)
+            {
+                TempData["ErrorMessage"] = "Дестинацията не е намерена.";
+                return RedirectToAction(nameof(Index));
+            }
 
-            // Връщаме потребителя обратно на опреснения начален екран
+            // ИНТЕЛИГЕНТНА ЗАЩИТА ПРИ ТРИЕНЕ
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            if (destination.PublisherId != userId)
+            {
+                TempData["ErrorMessage"] = "Нямате права за изтриване на чужда дестинация!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await destinationService.DeleteDestinationAsync(id);
+            TempData["SuccessMessage"] = "Дестинацията е изтрита успешно.";
             return RedirectToAction(nameof(Index));
         }
     }
