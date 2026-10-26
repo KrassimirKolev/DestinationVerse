@@ -1,8 +1,11 @@
 ﻿@using DestinationVerse.Data.Entities
+@using System.Security.Claims
 @model IEnumerable<Destination>
 
 @{
     ViewData["Title"] = "Всички Дестинации";
+    // Взимаме ID на текущо логнатия потребител директно в HTML изгледа
+    string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -22,7 +25,14 @@
         @foreach (var destination in Model)
         {
             <div class="col">
-                <div class="card h-100 shadow-sm border-0">
+                <div class="card h-100 shadow-sm border-0 position-relative">
+
+                    <!-- Визуална значка, ако дестинацията е създадена от текущия профил -->
+                    @if (destination.PublisherId == currentUserId)
+                    {
+                        <span class="badge bg-primary position-absolute top-0 start-0 m-2 shadow-sm">Моя публикация</span>
+                    }
+
                     @if (!string.IsNullOrEmpty(destination.CoverImageUrl))
                     {
                         <img src="@destination.CoverImageUrl" class="card-img-top" alt="@destination.Title" style="height: 220px; object-fit: cover;">
@@ -42,19 +52,26 @@
                         </div>
                     </div>
 
-                    <!-- Долна част на картата с всички CRUD действия и бутона за любими -->
                     <div class="card-footer bg-transparent border-0 pb-3">
-                        <!-- ⭐ Бутон за Пътеводителя (Добавен на готово) -->
-                        <form asp-controller="Destination" asp-action="AddToGuide" asp-route-id="@destination.Id" method="post" class="w-100 mb-2">
-                            <button type="submit" class="btn btn-sm btn-success w-100">⭐ Добави в Пътеводителя</button>
-                        </form>
+                        @if (destination.PublisherId != currentUserId)
+                        {
+                            <!-- Бутонът за любими се вижда САМО за дестинации на ДРУГИ хора -->
+                            <form asp-controller="Destination" asp-action="AddToGuide" asp-route-id="@destination.Id" method="post" class="w-100 mb-2">
+                                <button type="submit" class="btn btn-sm btn-success w-100">⭐ Добави в Пътеводителя</button>
+                            </form>
+                        }
 
                         <div class="d-flex gap-2">
                             <a asp-controller="Destination" asp-action="Details" asp-route-id="@destination.Id" class="btn btn-outline-info btn-sm w-100">Детайли</a>
-                            <a asp-controller="Destination" asp-action="Edit" asp-route-id="@destination.Id" class="btn btn-outline-warning btn-sm w-100">Редактирай</a>
-                            <form asp-controller="Destination" asp-action="Delete" asp-route-id="@destination.Id" method="post" onsubmit="return confirm('Сигурни ли сте, че искате да изтриете тази дестинация?');" class="w-100">
-                                <button type="submit" class="btn btn-outline-danger btn-sm w-100">Изтрий</button>
-                            </form>
+
+                            @if (destination.PublisherId == currentUserId)
+                            {
+                                <!-- Бутоните за Редактиране и Изтриване се виждат САМО за ЛИЧНИ публикации -->
+                                <a asp-controller="Destination" asp-action="Edit" asp-route-id="@destination.Id" class="btn btn-outline-warning btn-sm w-100">Редактирай</a>
+                                <form asp-controller="Destination" asp-action="Delete" asp-route-id="@destination.Id" method="post" onsubmit="return confirm('Сигурни ли сте, че искате да изтриете тази дестинация?');" class="w-100">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">Изтрий</button>
+                                </form>
+                            }
                         </div>
                     </div>
                 </div>
