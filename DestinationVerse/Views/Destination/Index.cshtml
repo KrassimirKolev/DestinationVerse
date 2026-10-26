@@ -1,0 +1,53 @@
+﻿@using DestinationVerse.Data.Entities
+@model IEnumerable<Destination>
+
+@{
+    ViewData["Title"] = "Всички Дестинации";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>@ViewData["Title"]</h2>
+    <a asp-controller="Destination" asp-action="Create" class="btn btn-primary">➕ Добави Дестинация</a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    @if (!Model.Any())
+    {
+        <div class="col-12 text-center my-5">
+            <p class="text-muted fs-4">Все още няма добавени дестинации в системата.</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var destination in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0">
+                    @if (!string.IsNullOrEmpty(destination.CoverImageUrl))
+                    {
+                        <img src="@destination.CoverImageUrl" class="card-img-top" alt="@destination.Title" style="height: 220px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="bg-light text-center py-5 border-bottom" style="height: 220px;">
+                            <span class="text-muted fs-1">🗺️</span>
+                        </div>
+                    }
+                    <div class="card-body">
+                        <h5 class="card-title text-primary fw-bold">@destination.Title</h5>
+                        <p class="card-text text-muted text-truncate" style="max-height: 50px;">@destination.Description</p>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-secondary">📍 @destination.Region.Name</span>
+                            <small class="text-muted">@destination.PublishedOn.ToString("dd.MM.yyyy")</small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 d-flex gap-2 pb-3">
+                        <a asp-controller="Destination" asp-action="Details" asp-route-id="@destination.Id" class="btn btn-outline-info btn-sm w-100">Детайли</a>
+                        <a asp-controller="Destination" asp-action="Edit" asp-route-id="@destination.Id" class="btn btn-outline-warning btn-sm w-100">Редактирай</a>
+                        <a asp-controller="Destination" asp-action="Delete" asp-route-id="@destination.Id" class="btn btn-outline-danger btn-sm w-100">Изтрий</a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
