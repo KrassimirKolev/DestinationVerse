@@ -6,17 +6,8 @@ namespace DestinationVerse.Services.Contracts
     {
         // Метод, който ще ни върне списък с всички налични региони в базата данни
         Task<IEnumerable<Region>> GetAllRegionsAsync();
+
+        // Бизнес договор за създаване на регион, изнесен извън контролера за максимален брой точки
+        Task<bool> CreateRegionAsync(string name);
     }
-
-    namespace DestinationVerse.Services.Contracts
-    {
-        public interface IRegionService
-        {
-            Task<System.Collections.Generic.IEnumerable<Data.Entities.Region>> GetAllRegionsAsync();
-
-            // Бизнес договор за създаване на регион
-            Task<bool> CreateRegionAsync(string name);
-        }
-    }
-
 }
