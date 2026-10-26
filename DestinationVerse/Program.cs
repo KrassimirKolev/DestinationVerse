@@ -40,6 +40,7 @@ namespace DestinationVerse
             // 🔗 Регистрация на нашите потребителски бизнес услуги за Dependency Injection
             builder.Services.AddScoped<IRegionService, RegionService>();
             builder.Services.AddScoped<IDestinationService, DestinationService>();
+            builder.Services.AddScoped<ICommentService, CommentService>();
 
             builder.Services.AddControllersWithViews();
 
