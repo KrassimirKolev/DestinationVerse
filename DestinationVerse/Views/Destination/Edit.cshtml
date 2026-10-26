@@ -1,0 +1,48 @@
+﻿@using DestinationVerse.ViewModels.Destination
+@model DestinationFormModel
+
+@{
+    ViewData["Title"] = "Редактирай дестинация";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 shadow-sm p-4 bg-white rounded border">
+        <h3 class="text-warning border-bottom pb-2 mb-4">⚙️ @ViewData["Title"]</h3>
+
+        <form asp-controller="Destination" asp-action="Edit" method="post">
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label fw-bold">Заглавие</label>
+                <input asp-for="Title" class="form-control" placeholder="Въведете заглавие..." />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label fw-bold">Описание</label>
+                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Опишете забележителностите..."></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CoverImageUrl" class="form-label fw-bold">Линк към снимка</label>
+                <input asp-for="CoverImageUrl" class="form-control" placeholder="https://example.com" />
+                <span asp-validation-for="CoverImageUrl" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="RegionId" class="form-label fw-bold">Промяна на регион</label>
+                <select asp-for="RegionId" class="form-select" asp-items="@(new SelectList(Model.Regions, "Id", "Name"))">
+                </select>
+                <span asp-validation-for="RegionId" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end border-top pt-3">
+                <a asp-controller="Destination" asp-action="Index" class="btn btn-outline-secondary">Отказ</a>
+                <button type="submit" class="btn btn-warning px-4 fw-bold">Обнови данните</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
