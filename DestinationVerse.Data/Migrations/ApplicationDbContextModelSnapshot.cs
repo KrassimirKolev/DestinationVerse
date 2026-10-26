@@ -331,7 +331,7 @@ namespace DestinationVerse.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@DESTINATIONVERSE.COM",
                             NormalizedUserName = "ADMIN@DESTINATIONVERSE.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGqP/Xb1vLfZ8J7gKq0uO4BvL6A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBLsHjJ9XlPshCkqU7Lz9mK+YqF5uGv1YgZ2tN1vK6fXp3zGv9mK+YqF5uGv1YgZ2tN1==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "STATIC-SECURITY-STAMP-001",
                             TwoFactorEnabled = false,

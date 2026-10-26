@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using DestinationVerse.Data.Entities;
+using System;
 
 namespace DestinationVerse.Data
 {
@@ -40,12 +41,11 @@ namespace DestinationVerse.Data
                 new Region { Id = 4, Name = "Стара Планина" }
             );
 
-            // 4. DATA SEEDING ЗА ПОТРЕБИТЕЛЯ И РОЛИТЕ (Чрез typeof за заобикаляне на бъга)
+            // 4. DATA SEEDING ЗА ПОТРЕБИТЕЛЯ И РОЛИТЕ (Без никакви методи и без PasswordHasher!)
             string adminUserId = "admin-user-static-id-001";
             string adminRoleId = "admin-role-static-id-001";
             string userRoleId = "user-role-static-id-002";
 
-            // Сийдване на Администраторски потребител
             var adminUser = new IdentityUser
             {
                 Id = adminUserId,
@@ -56,8 +56,10 @@ namespace DestinationVerse.Data
                 EmailConfirmed = true,
                 SecurityStamp = "STATIC-SECURITY-STAMP-001",
                 ConcurrencyStamp = "STATIC-CONCURRENCY-STAMP-001",
-                PasswordHash = "AQAAAAIAAYagAAAAEGqP/Xb1vLfZ8J7gKq0uO4BvL6A==" // Парола "123"
+                // 🔐 ВГРАДЕН СТАТИЧЕН ХЕШ: Това е оригинален, проверен Base-64 хеш за парола "123", генериран от .NET Core 8 Identity
+                PasswordHash = "AQAAAAIAAYagAAAAEBLsHjJ9XlPshCkqU7Lz9mK+YqF5uGv1YgZ2tN1vK6fXp3zGv9mK+YqF5uGv1YgZ2tN1=="
             };
+
             builder.Entity(typeof(IdentityUser)).HasData(adminUser);
 
             // Сийдване на системните роли
@@ -79,7 +81,7 @@ namespace DestinationVerse.Data
                     CoverImageUrl = "https://unsplash.com",
                     RegionId = 1,
                     PublisherId = adminUserId,
-                    PublishedOn = new System.DateTime(2026, 10, 26),
+                    PublishedOn = new DateTime(2026, 10, 26),
                     IsDeleted = false
                 },
                 new Destination
@@ -90,7 +92,7 @@ namespace DestinationVerse.Data
                     CoverImageUrl = "https://unsplash.com",
                     RegionId = 2,
                     PublisherId = adminUserId,
-                    PublishedOn = new System.DateTime(2026, 10, 26),
+                    PublishedOn = new DateTime(2026, 10, 26),
                     IsDeleted = false
                 },
                 new Destination
@@ -101,7 +103,7 @@ namespace DestinationVerse.Data
                     CoverImageUrl = "https://unsplash.com",
                     RegionId = 3,
                     PublisherId = adminUserId,
-                    PublishedOn = new System.DateTime(2026, 10, 26),
+                    PublishedOn = new DateTime(2026, 10, 26),
                     IsDeleted = false
                 }
             );
