@@ -63,6 +63,41 @@ namespace DestinationVerse.Data.Migrations
                     b.HasIndex("RegionId");
 
                     b.ToTable("Destinations");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CoverImageUrl = "https://unsplash.com",
+                            Description = "Група езера с ледников произход, разположени в Северозападна Рила. Най-посещаваната езерна група в България, включваща Сълзата, Окото, Бъбрека, Близнака, Трилистника, Рибното и Долното езеро.",
+                            IsDeleted = false,
+                            PublishedOn = new DateTime(2026, 10, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            PublisherId = "admin-user-static-id-001",
+                            RegionId = 1,
+                            Title = "Седемте рилски езера"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CoverImageUrl = "https://unsplash.com",
+                            Description = "Най-високият връх на Пирин планина със своите 2914 метра. Разположен е в северния дял на планината и предлага спиращи дъха панорамни гледки към мраморните била и дълбоките циркуси наоколо.",
+                            IsDeleted = false,
+                            PublishedOn = new DateTime(2026, 10, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            PublisherId = "admin-user-static-id-001",
+                            RegionId = 2,
+                            Title = "Връх Вихрен"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CoverImageUrl = "https://unsplash.com",
+                            Description = "Мистична пещера в Родопите, разположена в Триградското ждрело. Известна е с огромната си зала и подземния водопад, който според легендите е пътят, по който Орфей слиза в Подземното царство.",
+                            IsDeleted = false,
+                            PublishedOn = new DateTime(2026, 10, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            PublisherId = "admin-user-static-id-001",
+                            RegionId = 3,
+                            Title = "Дяволското гърло"
+                        });
                 });
 
             modelBuilder.Entity("DestinationVerse.Data.Entities.Region", b =>
@@ -235,6 +270,24 @@ namespace DestinationVerse.Data.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "admin-user-static-id-001",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "STATIC-CONCURRENCY-STAMP-001",
+                            Email = "admin@destinationverse.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@DESTINATIONVERSE.COM",
+                            NormalizedUserName = "ADMIN@DESTINATIONVERSE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGqP/Xb1vLfZ8J7gKq0uO4BvL6A==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "STATIC-SECURITY-STAMP-001",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@destinationverse.com"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
