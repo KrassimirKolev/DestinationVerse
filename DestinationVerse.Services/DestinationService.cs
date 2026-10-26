@@ -58,11 +58,13 @@ namespace DestinationVerse.Services
         {
             return await dbContext.UsersDestinations
                 .Where(ud => ud.UserId == userId && ud.Destination.IsDeleted == false)
-                .Select(ud => ud.Destination)
-                .Include(d => d.Region) // Зареждаме и региона за визуализацията в картите
+                .Include(ud => ud.Destination)          // 1. Включваме дестинацията
+                    .ThenInclude(d => d.Region)       // 2. През нея зареждаме региона
+                .Select(ud => ud.Destination)           // 3. Селектираме обекта накрая
                 .AsNoTracking()
                 .ToListAsync();
         }
+
 
         public async Task AddToFavoritesAsync(string userId, int destinationId)
         {
