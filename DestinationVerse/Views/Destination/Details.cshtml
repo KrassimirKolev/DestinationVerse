@@ -1,0 +1,46 @@
+﻿@using DestinationVerse.Data.Entities
+@model Destination
+
+@{
+    ViewData["Title"] = "Детайли за " + Model.Title;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10 shadow-sm p-4 bg-white rounded border">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Destination" asp-action="Index">Всички дестинации</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Детайли</li>
+            </ol>
+        </nav>
+
+        <div class="row mt-3">
+            <div class="col-md-6 mb-4">
+                @if (!string.IsNullOrEmpty(Model.CoverImageUrl))
+                {
+                    <img src="@Model.CoverImageUrl" class="img-fluid rounded shadow-sm w-100" alt="@Model.Title" style="max-height: 400px; object-fit: cover;">
+                }
+                else
+                {
+                    <div class="bg-light text-center py-5 rounded border d-flex align-items-center justify-content-center" style="height: 350px;">
+                        <span class="text-muted fs-1">🗺️ Няма налична снимка</span>
+                    </div>
+                }
+            </div>
+            <div class="col-md-6 d-flex flex-column justify-content-between">
+                <div>
+                    <h2 class="text-primary fw-bold mb-3">@Model.Title</h2>
+                    <p class="text-muted fs-5" style="white-space: pre-line; text-align: justify;">@Model.Description</p>
+                </div>
+                <div class="border-top pt-3 mt-4">
+                    <p class="mb-2"><strong>📍 Регион:</strong> <span class="badge bg-secondary fs-6">@Model.Region.Name</span></p>
+                    <p class="mb-3 text-muted"><strong>📅 Публикувано на:</strong> @Model.PublishedOn.ToString("dd MMMM yyyy г.")</p>
+                    <div class="d-flex gap-2">
+                        <a asp-controller="Destination" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100">✏️ Редактирай</a>
+                        <a asp-controller="Destination" asp-action="Index" class="btn btn-outline-secondary w-100">Назад</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
