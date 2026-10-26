@@ -51,17 +51,39 @@ namespace DestinationVerse.Services
         }
 
         // Изчисляване на среден рейтинг: Агрегираща LINQ функция
+        // 📐 Рефакториран среден рейтинг: Взима само последната оценка на всеки уникален потребител
         public async Task<double> GetAverageRatingAsync(int destinationId)
         {
+            // 1. Проверяваме дали изобщо има коментари за тази дестинация
             var hasComments = await dbContext.Comments.AnyAsync(c => c.DestinationId == destinationId);
             if (!hasComments)
             {
-                return 0.0; // Ако няма коментари, рейтингът е чиста нула
+                return 0.0;
             }
 
-            return await dbContext.Comments
+            // 2. Издърпваме коментарите за дестинацията в паметта, за да извършим напредналото групиране
+            var destinationComments = await dbContext.Comments
                 .Where(c => c.DestinationId == destinationId)
-                .AverageAsync(c => c.Rating);
+                .AsNoTracking()
+                .ToListAsync();
+
+            // 3. Сложен LINQ филтър:
+            // - Групираме по AuthorId (всеки потребител става отделна група)
+            // - От всяка група избираме най-новия запис (OrderByDescending по CreatedOn)
+            // - Извличаме само оценката (Rating) на този най-нов запис
+            var latestUserRatings = destinationComments
+                .GroupBy(c => c.AuthorId)
+                .Select(g => g.OrderByDescending(c => c.CreatedOn).First().Rating)
+                .ToList();
+
+            if (!latestUserRatings.Any())
+            {
+                return 0.0;
+            }
+
+            // 4. Връщаме средното аритметично от филтрираните уникални гласове
+            return latestUserRatings.Average();
         }
+
     }
 }
