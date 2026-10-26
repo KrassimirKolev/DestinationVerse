@@ -3,9 +3,9 @@
 @model Destination
 
 @{
-    ViewData["Title"] = "Детайли за " + Model.Title;
-    // Извличаме ID на текущо логнатия потребител в уеб браузъра
+    ViewData["Title"] = "Детайли";
     string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+    bool isAdmin = User.IsInRole("Administrator");
 }
 
 <div class="row justify-content-center">
@@ -26,36 +26,78 @@
                 else
                 {
                     <div class="bg-light text-center py-5 rounded border d-flex align-items-center justify-content-center" style="height: 350px;">
-                        <span class="text-muted fs-1">🗺️ Няма налична снимка</span>
+                        <span class="text-muted fs-1">🗺️ Няма снимка</span>
                     </div>
                 }
+
+                <div class="p-3 bg-light rounded border border-warning shadow-sm text-center mt-3">
+                    <h5 class="fw-bold mb-1 text-dark">Рейтинг на пътешествениците</h5>
+                    <div class="fs-3 text-warning fw-bold">
+                        <span>⭐ Отзиви и оценки</span>
+                    </div>
+                    <small class="text-muted">Разгледайте споделените впечатления долу</small>
+                </div>
             </div>
+
             <div class="col-md-6 d-flex flex-column justify-content-between">
                 <div>
                     <h2 class="text-primary fw-bold mb-3">@Model.Title</h2>
-                    <p class="text-muted fs-5" style="white-space: pre-line; text-align: justify;">@Model.Description</p>
+                    <p class="text-muted fs-5" style="white-space: pre-line; text-align: justify; max-height: 250px; overflow-y: auto;">@Model.Description</p>
                 </div>
-                <div class="border-top pt-3 mt-4">
+                <div class="border-top pt-3 mt-3">
                     <p class="mb-2"><strong>📍 Регион:</strong> <span class="badge bg-secondary fs-6">@Model.Region.Name</span></p>
-                    <p class="mb-3 text-muted"><strong>📅 Публикувано на:</strong> @Model.PublishedOn.ToString("dd MMMM yyyy г.")</p>
+                    <p class="mb-3 text-muted"><strong>📅 Публикувано на:</strong> @Model.PublishedOn.ToString("dd.MM.yyyy")</p>
 
                     <div class="d-flex flex-column gap-2">
                         @if (Model.PublisherId == currentUserId)
                         {
-                            <!-- Бутонът се вижда САМО ако текущият потребител е собственик -->
-                            <a asp-controller="Destination" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100 fw-bold">✏️ Редактирай</a>
+                            <a asp-controller="Destination" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100 fw-bold">✏️ Редактирай дестинация</a>
                         }
                         else
                         {
-                            <!-- Информативно съобщение за чужда дестинация -->
                             <div class="alert alert-light border text-center p-2 mb-0 small text-muted">
-                                <em>Редакция на тази публикация може да се прави само от нейния автор.</em>
+                                🔒 <em>Редакция на тази публикация може да се делать само от нейния автор.</em>
                             </div>
                         }
-                        <a asp-controller="Destination" asp-action="Index" class="btn btn-outline-secondary w-100">Назад</a>
+                        <a asp-controller="Destination" asp-action="Index" class="btn btn-outline-secondary w-100">Назад към каталога</a>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="row mt-5 border-top pt-4">
+            <div class="col-md-5 mb-4">
+                <h4 class="text-success fw-bold mb-3">💬 Оставете Вашата оценка</h4>
+                <form asp-controller="Destination" asp-action="AddComment" method="post" class="p-3 bg-light rounded border shadow-sm">
+                    <input type="hidden" name="DestinationId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Вашата оценка (Звезди):</label>
+                        <select name="Rating" class="form-select border-warning bg-white fw-bold" required>
+                            <option value="5" selected>⭐⭐⭐⭐⭐ (5 - Отличен)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 - Много добър)</option>
+                            <option value="3">⭐⭐⭐ (3 - Добър)</option>
+                            <option value="2">⭐⭐ (2 - Среден)</option>
+                            <option value="1">⭐ (1 - Слаб)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Вашите впечатления:</label>
+                        <textarea name="Text" class="form-control bg-white" rows="3" placeholder="Споделете интересни детайли, маршрути или съвети..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm">🚀 Изпрати отзив</button>
+                </form>
+            </div>
+
+            <div class="col-md-7">
+                <h4 class="text-dark fw-bold mb-3">Списък на отзивите</h4>
+                <div class="alert alert-light border text-center py-4 small text-muted">
+                    💬 Отзивите и коментарите се модерират в базата данни съгласно правилата за поверителност.
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
