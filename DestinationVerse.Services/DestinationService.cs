@@ -30,5 +30,29 @@ namespace DestinationVerse.Services
             await dbContext.Destinations.AddAsync(destination);
             await dbContext.SaveChangesAsync();
         }
+
+        public async Task<Destination?> GetDestinationByIdAsync(int id)
+        {
+            return await dbContext.Destinations
+                .Include(d => d.Region) // Вземаме и региона, за да се вижда името му в детайлите
+                .FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted == false);
+        }
+
+        public async Task UpdateDestinationAsync(Destination destination)
+        {
+            dbContext.Destinations.Update(destination);
+            await dbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteDestinationAsync(int id)
+        {
+            var destination = await dbContext.Destinations.FindAsync(id);
+            if (destination != null)
+            {
+                destination.IsDeleted = true; // Скриваме я от потребителите (Soft Delete), без да я трием физически от SQL
+                await dbContext.SaveChangesAsync();
+            }
+        }
+
     }
 }
