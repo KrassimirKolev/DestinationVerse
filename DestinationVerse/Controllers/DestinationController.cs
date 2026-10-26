@@ -26,7 +26,7 @@ namespace DestinationVerse.Controllers
             return View(destinations);
         }
 
-        // ➕ 2. GET екшън: Отваря празната форма и я подава към изгледа
+        // 2. GET екшън: Отваря празната форма и я подава към изгледа
         [HttpGet]
         public async Task<IActionResult> Create()
         {
@@ -44,7 +44,7 @@ namespace DestinationVerse.Controllers
             return View("Create", model);
         }
 
-        // ➕ 3. POST екшън: Приема данните от формата и ги записва в базата данни
+        // 3. POST екшън: Приема данните от формата и ги записва в базата данни
         [HttpPost]
         public async Task<IActionResult> Create(ViewModels.Destination.DestinationFormModel model)
         {
@@ -245,5 +245,15 @@ namespace DestinationVerse.Controllers
             return RedirectToAction(nameof(Create));
         }
 
+        // ❌ 10. POST екшън: Сигурно изтриване (Soft Delete) на дестинация
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            // Извикваме бизнес логиката от сървиса (която задава IsDeleted = true)
+            await destinationService.DeleteDestinationAsync(id);
+
+            // Връщаме потребителя обратно на опреснения начален екран
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
