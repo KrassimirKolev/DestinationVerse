@@ -22,7 +22,7 @@ namespace DestinationVerse
             //    .AddEntityFrameworkStores<ApplicationDbContext>();
             //builder.Services.AddControllersWithViews();
 
-            // 🛡️ Конфигуриране на оригиналния Identity с олекотени пароли            
+            // Конфигуриране на оригиналния Identity с олекотени пароли            
             builder.Services.AddDefaultIdentity<IdentityUser>(options =>
             {
                 // Изключваме потвърждението по имейл за лесно локално тестване
