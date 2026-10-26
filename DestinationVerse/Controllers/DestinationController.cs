@@ -26,6 +26,59 @@ namespace DestinationVerse.Controllers
             return View(destinations);
         }
 
+        // ➕ 2. GET екшън: Отваря празната форма и я подава към изгледа
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            var regions = await regionService.GetAllRegionsAsync();
+
+            var model = new ViewModels.Destination.DestinationFormModel()
+            {
+                Regions = regions.Select(r => new ViewModels.Destination.RegionSelectViewModel()
+                {
+                    Id = r.Id,
+                    Name = r.Name
+                }).ToList()
+            };
+
+            return View("Create", model);
+        }
+
+        // ➕ 3. POST екшън: Приема данните от формата и ги записва в базата данни
+        [HttpPost]
+        public async Task<IActionResult> Create(ViewModels.Destination.DestinationFormModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var regions = await regionService.GetAllRegionsAsync();
+                model.Regions = regions.Select(r => new ViewModels.Destination.RegionSelectViewModel()
+                {
+                    Id = r.Id,
+                    Name = r.Name
+                }).ToList();
+
+                return View("Create", model);
+            }
+
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                            ?? throw new InvalidOperationException("Потребителят не е намерен.");
+
+            var destination = new Data.Entities.Destination()
+            {
+                Title = model.Title,
+                Description = model.Description,
+                CoverImageUrl = model.CoverImageUrl,
+                RegionId = model.RegionId,
+                PublishedOn = DateTime.Now,
+                PublisherId = userId,
+                IsDeleted = false
+            };
+
+            await destinationService.AddDestinationAsync(destination);
+            return RedirectToAction(nameof(Index));
+        }
+
+
         // 4. GET екшън: Детайли за конкретна дестинация
         [HttpGet]
         public async Task<IActionResult> Details(int id)
