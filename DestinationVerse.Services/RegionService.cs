@@ -45,5 +45,39 @@ namespace DestinationVerse.Services
             await dbContext.SaveChangesAsync();
             return true;
         }
+
+        public async Task<Region?> GetRegionByIdAsync(int id)
+        {
+            return await dbContext.Regions.FindAsync(id);
+        }
+
+        public async Task<bool> UpdateRegionAsync(int id, string name)
+        {
+            if (string.IsNullOrWhiteSpace(name) || name.Trim().Length < 3 || name.Trim().Length > 20)
+            {
+                return false;
+            }
+
+            var region = await dbContext.Regions.FindAsync(id);
+            if (region == null)
+            {
+                return false;
+            }
+
+            region.Name = name.Trim();
+            await dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task DeleteRegionAsync(int id)
+        {
+            var region = await dbContext.Regions.FindAsync(id);
+            if (region != null)
+            {
+                dbContext.Regions.Remove(region);
+                await dbContext.SaveChangesAsync();
+            }
+        }
+
     }
 }

@@ -207,5 +207,43 @@ namespace DestinationVerse.Controllers
             // Връща ни обратно във формата за дестинация
             return RedirectToAction(nameof(Create));
         }
+
+        // GET: Зарежда форма за редактиране на регион
+        [HttpGet]
+        public async Task<IActionResult> EditRegion(int id)
+        {
+            var region = await regionService.GetRegionByIdAsync(id);
+            if (region == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.RegionId = id;
+            return View("EditRegion", region.Name);
+        }
+
+        // POST: Записва редактирания регион чрез бизнес слоя
+        [HttpPost]
+        public async Task<IActionResult> EditRegion(int id, string name)
+        {
+            bool isSuccess = await regionService.UpdateRegionAsync(id, name);
+            if (!isSuccess)
+            {
+                ModelState.AddModelError("Name", "Невалидно име на регион (между 3 and 20 символа).");
+                ViewBag.RegionId = id;
+                return View("EditRegion", name);
+            }
+
+            return RedirectToAction(nameof(Create));
+        }
+
+        // POST: Изтрива регион директно от списъка
+        [HttpPost]
+        public async Task<IActionResult> DeleteRegion(int id)
+        {
+            await regionService.DeleteRegionAsync(id);
+            return RedirectToAction(nameof(Create));
+        }
+
     }
 }

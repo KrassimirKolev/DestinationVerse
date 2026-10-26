@@ -9,5 +9,10 @@ namespace DestinationVerse.Services.Contracts
 
         // Бизнес договор за създаване на регион, изнесен извън контролера за максимален брой точки
         Task<bool> CreateRegionAsync(string name);
+
+        Task<Data.Entities.Region?> GetRegionByIdAsync(int id);
+        Task<bool> UpdateRegionAsync(int id, string name);
+        Task DeleteRegionAsync(int id);
+
     }
 }
