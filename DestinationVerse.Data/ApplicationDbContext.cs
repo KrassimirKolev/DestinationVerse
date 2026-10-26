@@ -40,7 +40,15 @@ namespace DestinationVerse.Data
                 .WithMany(d => d.UsersDestinations)
                 .HasForeignKey(ud => ud.DestinationId)
                 .OnDelete(DeleteBehavior.Restrict); // Изключва каскадното изтриване по този път
-        }
 
+            // 📍 3. DATA SEEDING: Вкарване на първоначални региони в базата данни
+            builder.Entity<Region>().HasData(
+                new Region { Id = 1, Name = "Рила" },
+                new Region { Id = 2, Name = "Пирин" },
+                new Region { Id = 3, Name = "Родопи" },
+                new Region { Id = 4, Name = "Стара Планина" }
+            );
+
+        }
     }
 }

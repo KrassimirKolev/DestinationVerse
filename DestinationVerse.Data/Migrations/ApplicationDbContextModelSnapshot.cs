@@ -81,6 +81,28 @@ namespace DestinationVerse.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Regions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Рила"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Пирин"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Родопи"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Стара Планина"
+                        });
                 });
 
             modelBuilder.Entity("DestinationVerse.Data.Entities.UserDestination", b =>
