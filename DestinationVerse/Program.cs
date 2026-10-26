@@ -1,4 +1,6 @@
 using DestinationVerse.Data;
+using DestinationVerse.Services;
+using DestinationVerse.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,6 +36,10 @@ namespace DestinationVerse
                 options.Password.RequiredLength = 3; // Паролата може да е само 3 символа
             })
             .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            // 🔗 Регистрация на нашите потребителски бизнес услуги за Dependency Injection
+            builder.Services.AddScoped<IRegionService, RegionService>();
+            builder.Services.AddScoped<IDestinationService, DestinationService>();
 
             builder.Services.AddControllersWithViews();
 
