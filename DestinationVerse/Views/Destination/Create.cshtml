@@ -29,7 +29,11 @@
             </div>
 
             <div class="mb-4">
-                <label asp-for="RegionId" class="form-label fw-bold">Изберете регион</label>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label asp-for="RegionId" class="form-label fw-bold mb-0">Изберете регион</label>
+                    <a asp-controller="Destination" asp-action="CreateRegion" class="text-decoration-none small text-success">➕ Нов регион</a>
+                </div>
+
                 <select asp-for="RegionId" class="form-select" asp-items="@(new SelectList(Model.Regions, "Id", "Name"))">
                     <option value="" selected disabled>-- Изберете регион от списъка --</option>
                 </select>

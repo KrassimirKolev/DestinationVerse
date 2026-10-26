@@ -184,5 +184,28 @@ namespace DestinationVerse.Controllers
             return RedirectToAction(nameof(MyGuide));
         }
 
+        // GET: Отваряне на формата
+        [HttpGet]
+        public IActionResult CreateRegion()
+        {
+            return View();
+        }
+
+        // POST: Само препраща данните към Services слоя
+        [HttpPost]
+        public async Task<IActionResult> CreateRegion(string name)
+        {
+            // Викаме бизнес логиката от сървиса
+            bool isSuccess = await regionService.CreateRegionAsync(name);
+
+            if (!isSuccess)
+            {
+                ModelState.AddModelError("Name", "Невалидно име или регионът вече съществува (между 3 и 20 символа).");
+                return View();
+            }
+
+            // Връща ни обратно във формата за дестинация
+            return RedirectToAction(nameof(Create));
+        }
     }
 }
