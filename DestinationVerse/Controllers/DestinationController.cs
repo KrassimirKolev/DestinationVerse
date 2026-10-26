@@ -92,7 +92,7 @@ namespace DestinationVerse.Controllers
             return View(destination);
         }
 
-        // 5. GET екшън: Зарежда формата за редактиране със съществуващите данни
+        // 5. GET екшън: Зарежда формата за редактиране със съществуващите данни само ако потребителят е автор!
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -100,6 +100,13 @@ namespace DestinationVerse.Controllers
             if (destination == null)
             {
                 return NotFound();
+            }
+
+            // СЪРВЪРНА ЗАЩИТА: Само авторът може да отвори тази форма
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            if (destination.PublisherId != userId)
+            {
+                return Unauthorized(); // Предотвратява неоторизиран достъп през URL адреса
             }
 
             var regions = await regionService.GetAllRegionsAsync();
@@ -120,7 +127,7 @@ namespace DestinationVerse.Controllers
             return View(model);
         }
 
-        // 6. POST екшън: Записва редактираните данни в SQL базата данни
+        // 6. POST екшън: Записва редактираните данни само ако потребителят е автор!
         [HttpPost]
         public async Task<IActionResult> Edit(int id, ViewModels.Destination.DestinationFormModel model)
         {
@@ -141,6 +148,13 @@ namespace DestinationVerse.Controllers
                 return NotFound();
             }
 
+            // СЪРВЪРНА ЗАЩИТА: Валидация на авторството преди запис в SQL Server
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            if (destination.PublisherId != userId)
+            {
+                return Unauthorized();
+            }
+
             destination.Title = model.Title;
             destination.Description = model.Description;
             destination.CoverImageUrl = model.CoverImageUrl;
@@ -149,6 +163,7 @@ namespace DestinationVerse.Controllers
             await destinationService.UpdateDestinationAsync(destination);
             return RedirectToAction(nameof(Index));
         }
+
 
         // 7. GET екшън: Извежда личната колекция на потребителя („Моят Пътеводител“)
         [HttpGet]
