@@ -1,7 +1,11 @@
 ﻿using DestinationVerse.Services.Contracts;
+using DestinationVerse.ViewModels.Destination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace DestinationVerse.Controllers
 {
@@ -10,31 +14,44 @@ namespace DestinationVerse.Controllers
     {
         private readonly IDestinationService destinationService;
         private readonly IRegionService regionService;
+        private readonly ICommentService commentService;
 
-        // Вграденият в .NET IoC контейнер автоматично инжектира нашите CRUD услуги тук
-        public DestinationController(IDestinationService destinationService, IRegionService regionService)
+        // IoC контейнерът инжектира трите услуги автоматично
+        public DestinationController(
+            IDestinationService destinationService,
+            IRegionService regionService,
+            ICommentService commentService)
         {
             this.destinationService = destinationService;
             this.regionService = regionService;
+            this.commentService = commentService;
         }
 
-        // 1. Страница „Всички дестинации“ (Index / All)
+        // 1. Страница „Всички дестинации“
         [HttpGet]
         public async Task<IActionResult> Index()
         {
             var destinations = await destinationService.GetAllAvailableDestinationsAsync();
+
+            var ratings = new System.Collections.Generic.Dictionary<int, double>();
+            foreach (var dest in destinations)
+            {
+                ratings[dest.Id] = await commentService.GetAverageRatingAsync(dest.Id);
+            }
+            ViewBag.Ratings = ratings;
+
             return View(destinations);
         }
 
-        // 2. GET екшън: Отваря празната форма и я подава към изгледа
+        // 2. GET екшън: Отваря празната форма
         [HttpGet]
         public async Task<IActionResult> Create()
         {
             var regions = await regionService.GetAllRegionsAsync();
 
-            var model = new ViewModels.Destination.DestinationFormModel()
+            var model = new DestinationFormModel()
             {
-                Regions = regions.Select(r => new ViewModels.Destination.RegionSelectViewModel()
+                Regions = regions.Select(r => new RegionSelectViewModel()
                 {
                     Id = r.Id,
                     Name = r.Name
@@ -44,14 +61,14 @@ namespace DestinationVerse.Controllers
             return View("Create", model);
         }
 
-        // 3. POST екшън: Приема данните от формата и ги записва в базата данни
+        // 3. POST екшън: Приема данните от формата
         [HttpPost]
-        public async Task<IActionResult> Create(ViewModels.Destination.DestinationFormModel model)
+        public async Task<IActionResult> Create(DestinationFormModel model)
         {
             if (!ModelState.IsValid)
             {
                 var regions = await regionService.GetAllRegionsAsync();
-                model.Regions = regions.Select(r => new ViewModels.Destination.RegionSelectViewModel()
+                model.Regions = regions.Select(r => new RegionSelectViewModel()
                 {
                     Id = r.Id,
                     Name = r.Name
@@ -78,7 +95,6 @@ namespace DestinationVerse.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
         // 4. GET екшън: Детайли за конкретна дестинация
         [HttpGet]
         public async Task<IActionResult> Details(int id)
@@ -89,10 +105,64 @@ namespace DestinationVerse.Controllers
                 return NotFound();
             }
 
+            ViewBag.Comments = await commentService.GetCommentsByDestinationIdAsync(id);
+            ViewBag.AverageRating = await commentService.GetAverageRatingAsync(id);
+            ViewBag.NewComment = new CommentFormModel { DestinationId = id };
+
             return View(destination);
         }
 
-        // 5. GET екшън: Зарежда формата за редактиране със съществуващите данни само ако потребителят е автор!
+        //  4.1 POST екшън: Добавяне на коментар и оценка
+        [HttpPost]
+        public async Task<IActionResult> AddComment(CommentFormModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Коментарът трябва да бъде между 4 и 500 символа, а оценката между 1 и 5.";
+                return RedirectToAction(nameof(Details), new { id = model.DestinationId });
+            }
+
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var comment = new Data.Entities.Comment()
+            {
+                Text = model.Text.Trim(),
+                Rating = model.Rating,
+                DestinationId = model.DestinationId,
+                AuthorId = userId
+            };
+
+            await commentService.AddCommentAsync(comment);
+            TempData["SuccessMessage"] = "Успешно добавихте коментар и оценка!";
+            return RedirectToAction(nameof(Details), new { id = model.DestinationId });
+        }
+
+        // 4.2 POST екшън: Изтриване на коментар
+        [HttpPost]
+        public async Task<IActionResult> DeleteComment(int id, int destinationId)
+        {
+            var comment = await commentService.GetCommentByIdAsync(id);
+            if (comment == null)
+            {
+                return NotFound();
+            }
+
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            bool isAdmin = User.IsInRole("Administrator");
+
+            if (comment.AuthorId == userId || isAdmin)
+            {
+                await commentService.DeleteCommentAsync(id);
+                TempData["SuccessMessage"] = "Коментарът беше изтрит.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Нямате права да изтриете този коментар!";
+            }
+
+            return RedirectToAction(nameof(Details), new { id = destinationId });
+        }
+
+        // 5. GET екшън: Зарежда формата за редактиране
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -103,7 +173,6 @@ namespace DestinationVerse.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // ИНТЕЛИГЕНТНА ЗАЩИТА: Записваме съобщение в TempData и връщаме потребителя обратно
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             if (destination.PublisherId != userId)
             {
@@ -113,13 +182,13 @@ namespace DestinationVerse.Controllers
 
             var regions = await regionService.GetAllRegionsAsync();
 
-            var model = new ViewModels.Destination.DestinationFormModel()
+            var model = new DestinationFormModel()
             {
                 Title = destination.Title,
                 Description = destination.Description,
                 CoverImageUrl = destination.CoverImageUrl,
                 RegionId = destination.RegionId,
-                Regions = regions.Select(r => new ViewModels.Destination.RegionSelectViewModel()
+                Regions = regions.Select(r => new RegionSelectViewModel()
                 {
                     Id = r.Id,
                     Name = r.Name
@@ -129,14 +198,14 @@ namespace DestinationVerse.Controllers
             return View(model);
         }
 
-        // 6. POST екшън: Записва редактираните данни само ако потребителят е автор!
+        // 6. POST екшън: Записва редактираните данни
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, ViewModels.Destination.DestinationFormModel model)
+        public async Task<IActionResult> Edit(int id, DestinationFormModel model)
         {
             if (!ModelState.IsValid)
             {
                 var regions = await regionService.GetAllRegionsAsync();
-                model.Regions = regions.Select(r => new ViewModels.Destination.RegionSelectViewModel() { Id = r.Id, Name = r.Name });
+                model.Regions = regions.Select(r => new RegionSelectViewModel() { Id = r.Id, Name = r.Name });
                 return View(model);
             }
 
@@ -147,7 +216,6 @@ namespace DestinationVerse.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // ИНТЕЛИГЕНТНА ЗАЩИТА ПРИ ЗАПИС
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             if (destination.PublisherId != userId)
             {
@@ -167,119 +235,103 @@ namespace DestinationVerse.Controllers
 
         // 7. GET екшън: Извежда личната колекция на потребителя („Моят Пътеводител“)
         [HttpGet]
-        public async Task<IActionResult> MyGuide()
+        public IActionResult MyGuide()
         {
-            // Взимаме уникалния Id идентификатор на текущо логнатия потребител по чист начин
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                             ?? throw new InvalidOperationException("Потребителят не е намерен.");
 
-            var favorites = await destinationService.GetUserFavoritesAsync(userId);
-            return View(favorites);
+            var favorites = destinationService.GetUserFavoritesAsync(userId).GetAwaiter().GetResult();
+            return View("MyGuide", favorites);
         }
 
-        // 8. POST екшън: Добавя дестинация в колекцията и пренасочва обратно
+        // 8. POST екшън: Добавя дестинация в колекцията
         [HttpPost]
-        public async Task<IActionResult> AddToGuide(int id)
+        public IActionResult AddToGuide(int id)
         {
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                             ?? throw new InvalidOperationException("Потребителят не е намерен.");
 
-            await destinationService.AddToFavoritesAsync(userId, id);
+            destinationService.AddToFavoritesAsync(userId, id).GetAwaiter().GetResult();
             return RedirectToAction(nameof(MyGuide));
         }
 
         // 9. POST екшън: Премахва дестинация от колекцията
         [HttpPost]
-        public async Task<IActionResult> RemoveFromGuide(int id)
+        public IActionResult RemoveFromGuide(int id)
         {
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                             ?? throw new InvalidOperationException("Потребителят не е намерен.");
 
-            await destinationService.RemoveFromFavoritesAsync(userId, id);
+            destinationService.RemoveFromFavoritesAsync(userId, id).GetAwaiter().GetResult();
             return RedirectToAction(nameof(MyGuide));
         }
-
-        // GET: Отваряне на формата
+        // GET: Отваряне на формата за нов регион
         [HttpGet]
         public IActionResult CreateRegion()
         {
             return View();
         }
-
         // POST: Само препраща данните към Services слоя
         [HttpPost]
-        public async Task<IActionResult> CreateRegion(string name)
+        public IActionResult CreateRegion(string name)
         {
-            // Викаме бизнес логиката от сървиса
-            bool isSuccess = await regionService.CreateRegionAsync(name);
-
+            bool isSuccess = regionService.CreateRegionAsync(name).GetAwaiter().GetResult();
             if (!isSuccess)
             {
                 ModelState.AddModelError("Name", "Невалидно име или регионът вече съществува (между 3 и 20 символа).");
                 return View();
             }
-
-            // Връща ни обратно във формата за дестинация
             return RedirectToAction(nameof(Create));
         }
-
         // GET: Зарежда форма за редактиране на регион
         [HttpGet]
-        public async Task<IActionResult> EditRegion(int id)
+        public IActionResult EditRegion(int id)
         {
-            var region = await regionService.GetRegionByIdAsync(id);
+            var region = regionService.GetRegionByIdAsync(id).GetAwaiter().GetResult();
             if (region == null)
             {
                 return NotFound();
             }
-
             ViewBag.RegionId = id;
             return View("EditRegion", region.Name);
         }
-
         // POST: Записва редактирания регион чрез бизнес слоя
         [HttpPost]
-        public async Task<IActionResult> EditRegion(int id, string name)
+        public IActionResult EditRegion(int id, string name)
         {
-            bool isSuccess = await regionService.UpdateRegionAsync(id, name);
+            bool isSuccess = regionService.UpdateRegionAsync(id, name).GetAwaiter().GetResult();
             if (!isSuccess)
             {
-                ModelState.AddModelError("Name", "Невалидно име на регион (между 3 and 20 символа).");
+                ModelState.AddModelError("Name", "Невалидно име на регион (между 3 и 20 символа).");
                 ViewBag.RegionId = id;
                 return View("EditRegion", name);
             }
-
             return RedirectToAction(nameof(Create));
         }
-
         // POST: Изтрива регион директно от списъка
         [HttpPost]
-        public async Task<IActionResult> DeleteRegion(int id)
+        public IActionResult DeleteRegion(int id)
         {
-            await regionService.DeleteRegionAsync(id);
+            regionService.DeleteRegionAsync(id).GetAwaiter().GetResult();
             return RedirectToAction(nameof(Create));
         }
-
-        // 10. POST екшън: Сигурно изтриване (Soft Delete) на дестинация само за нейния автор!
+        // 10. POST екшън: Сигурно изтриване (Soft Delete) на дестинация
         [HttpPost]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
-            var destination = await destinationService.GetDestinationByIdAsync(id);
+            var destination = destinationService.GetDestinationByIdAsync(id).GetAwaiter().GetResult();
             if (destination == null)
             {
                 TempData["ErrorMessage"] = "Дестинацията не е намерена.";
                 return RedirectToAction(nameof(Index));
             }
-
-            // ИНТЕЛИГЕНТНА ЗАЩИТА ПРИ ТРИЕНЕ
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             if (destination.PublisherId != userId)
             {
                 TempData["ErrorMessage"] = "Нямате права за изтриване на чужда дестинация!";
                 return RedirectToAction(nameof(Index));
             }
-
-            await destinationService.DeleteDestinationAsync(id);
+            destinationService.DeleteDestinationAsync(id).GetAwaiter().GetResult();
             TempData["SuccessMessage"] = "Дестинацията е изтрита успешно.";
             return RedirectToAction(nameof(Index));
         }
