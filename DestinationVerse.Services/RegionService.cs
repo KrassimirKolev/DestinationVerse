@@ -51,6 +51,7 @@ namespace DestinationVerse.Services
             return await dbContext.Regions.FindAsync(id);
         }
 
+        // 🔐 Обновяване: Само администраторът ще има достъп до тук през контролера
         public async Task<bool> UpdateRegionAsync(int id, string name)
         {
             if (string.IsNullOrWhiteSpace(name) || name.Trim().Length < 3 || name.Trim().Length > 20)
@@ -69,15 +70,29 @@ namespace DestinationVerse.Services
             return true;
         }
 
+        // 🛡️ Сигурно изтриване: Спира операцията, ако има активни връзки (дестинации)
         public async Task DeleteRegionAsync(int id)
         {
             var region = await dbContext.Regions.FindAsync(id);
-            if (region != null)
+            if (region == null)
             {
-                dbContext.Regions.Remove(region);
-                await dbContext.SaveChangesAsync();
+                return;
             }
+
+            // Проверяваме дали към този регион има активни (неизтрити) дестинации
+            var hasActiveDestinations = await dbContext.Destinations
+                .AnyAsync(d => d.RegionId == id && d.IsDeleted == false);
+
+            // Ако има обвързани обекти, бизнес правилото забранява изтриването!
+            if (hasActiveDestinations)
+            {
+                return;
+            }
+
+            dbContext.Regions.Remove(region);
+            await dbContext.SaveChangesAsync();
         }
+
 
     }
 }

@@ -283,22 +283,38 @@ namespace DestinationVerse.Controllers
             }
             return RedirectToAction(nameof(Create));
         }
-        // GET: Зарежда форма за редактиране на регион
+        
+        // GET: Зарежда форма за редактиране на регион (Само за Администратор)
         [HttpGet]
         public IActionResult EditRegion(int id)
         {
+            // 🔐 РОЛЕВА ЗАЩИТА: Ако потребителят не е администратор, го спираме веднага
+            if (!User.IsInRole("Administrator"))
+            {
+                TempData["ErrorMessage"] = "Само системните администратори могат да променят географски региони!";
+                return RedirectToAction(nameof(Create));
+            }
+
             var region = regionService.GetRegionByIdAsync(id).GetAwaiter().GetResult();
             if (region == null)
             {
                 return NotFound();
             }
+
             ViewBag.RegionId = id;
             return View("EditRegion", region.Name);
         }
-        // POST: Записва редактирания регион чрез бизнес слоя
+
+        // POST: Записва редактирания регион (Само за Администратор)
         [HttpPost]
         public IActionResult EditRegion(int id, string name)
         {
+            if (!User.IsInRole("Administrator"))
+            {
+                TempData["ErrorMessage"] = "Нямате административни права за тази софтуерна операция!";
+                return RedirectToAction(nameof(Create));
+            }
+
             bool isSuccess = regionService.UpdateRegionAsync(id, name).GetAwaiter().GetResult();
             if (!isSuccess)
             {
@@ -306,15 +322,45 @@ namespace DestinationVerse.Controllers
                 ViewBag.RegionId = id;
                 return View("EditRegion", name);
             }
+
+            TempData["SuccessMessage"] = "Регионът е променен успешно.";
             return RedirectToAction(nameof(Create));
         }
-        // POST: Изтрива регион директно от списъка
+
+        // POST: Изтрива регион директно от списъка (Само за Администратор с бизнес проверка)
         [HttpPost]
         public IActionResult DeleteRegion(int id)
         {
-            regionService.DeleteRegionAsync(id).GetAwaiter().GetResult();
+            if (!User.IsInRole("Administrator"))
+            {
+                TempData["ErrorMessage"] = "Нямате административни права за изтриване на региони!";
+                return RedirectToAction(nameof(Create));
+            }
+
+            // Преди да изтрием, проверяваме дали има обвързани дестинации, за да върнем съобщение
+            var region = regionService.GetRegionByIdAsync(id).GetAwaiter().GetResult();
+            if (region != null)
+            {
+                // Използваме директна софтуерна проверка за интегритет
+                var hasLinks = regionService.GetAllRegionsAsync().GetAwaiter().GetResult();
+
+                regionService.DeleteRegionAsync(id).GetAwaiter().GetResult();
+
+                // Проверяваме дали обектът все още съществува след опита за триене
+                var checkExists = regionService.GetRegionByIdAsync(id).GetAwaiter().GetResult();
+                if (checkExists != null)
+                {
+                    TempData["ErrorMessage"] = "Регионът не може да бъде изтрит, защото към него има активни дестинации!";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "Регионът е премахнат успешно от системата.";
+                }
+            }
+
             return RedirectToAction(nameof(Create));
         }
+
         // 10. POST екшън: Сигурно изтриване (Soft Delete) на дестинация
         [HttpPost]
         public IActionResult Delete(int id)

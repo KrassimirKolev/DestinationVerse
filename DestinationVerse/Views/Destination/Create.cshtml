@@ -47,33 +47,43 @@
         </form>
         <div class="row justify-content-center mt-4">
             <div class="col-md-8 p-3 bg-light rounded border shadow-sm">
-                <h5 class="text-secondary fw-bold mb-3">🛠️ Управление на регионите</h5>
+                <h5 class="text-secondary fw-bold mb-3">🗺️ Налични географски региони в системата</h5>
                 <table class="table table-sm table-hover align-middle bg-white rounded">
                     <thead>
                         <tr>
                             <th>Име на регион</th>
-                            <th class="text-end" style="width: 150px;">Действия</th>
+                            <!-- Линковете за управление се виждат в заглавието само от Администратор -->
+                            @if (User.IsInRole("Administrator"))
+                            {
+                                <th class="text-end" style="width: 170px;">Администриране</th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var region in Model.Regions)
                         {
                             <tr>
-                                <td class="fw-bold text-dark">@region.Name</td>
-                                <td class="text-end">
-                                    <div class="d-flex gap-1 justify-content-end">
-                                        <a asp-controller="Destination" asp-action="EditRegion" asp-route-id="@region.Id" class="btn btn-sm btn-outline-warning py-0 px-2">Модифицирай</a>
-                                        <form asp-controller="Destination" asp-action="DeleteRegion" asp-route-id="@region.Id" method="post" onsubmit="return confirm('Сигурни ли сте, че искате да изтриете този регион?');" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">Трий</button>
-                                        </form>
-                                    </div>
-                                </td>
+                                <td class="fw-bold text-dark">📍 @region.Name</td>
+
+                                <!-- 🔐 РОЛЕВА ИНТЕГРАЦИЯ: Обикновеният потребител вижда само списъка, без бутони! -->
+                                @if (User.IsInRole("Administrator"))
+                                {
+                                    <td class="text-end">
+                                        <div class="d-flex gap-1 justify-content-end">
+                                            <a asp-controller="Destination" asp-action="EditRegion" asp-route-id="@region.Id" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.8rem;">Промени</a>
+                                            <form asp-controller="Destination" asp-action="DeleteRegion" asp-route-id="@region.Id" method="post" onsubmit="return confirm('Сигурни ли сте, че искате да премахнете този регион?');" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.8rem;">Изтрий</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                }
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
         </div>
+
 
     </div>
 </div>
