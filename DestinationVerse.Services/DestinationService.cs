@@ -54,5 +54,47 @@ namespace DestinationVerse.Services
             }
         }
 
+        public async Task<IEnumerable<Destination>> GetUserFavoritesAsync(string userId)
+        {
+            return await dbContext.UsersDestinations
+                .Where(ud => ud.UserId == userId && ud.Destination.IsDeleted == false)
+                .Select(ud => ud.Destination)
+                .Include(d => d.Region) // Зареждаме и региона за визуализацията в картите
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task AddToFavoritesAsync(string userId, int destinationId)
+        {
+            // Първо проверяваме дали записът вече не съществува в базата, за да не счупим съставния ключ
+            var exists = await dbContext.UsersDestinations
+                .AnyAsync(ud => ud.UserId == userId && ud.DestinationId == destinationId);
+
+            if (!exists)
+            {
+                var userDestination = new UserDestination()
+                {
+                    UserId = userId,
+                    DestinationId = destinationId
+                };
+
+                await dbContext.UsersDestinations.AddAsync(userDestination);
+                await dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task RemoveFromFavoritesAsync(string userId, int destinationId)
+        {
+            var userDestination = await dbContext.UsersDestinations
+                .FirstOrDefaultAsync(ud => ud.UserId == userId && ud.DestinationId == destinationId);
+
+            if (userDestination != null)
+            {
+                dbContext.UsersDestinations.Remove(userDestination);
+                await dbContext.SaveChangesAsync();
+            }
+        }
+
+
     }
 }

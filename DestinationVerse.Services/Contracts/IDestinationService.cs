@@ -19,5 +19,15 @@ namespace DestinationVerse.Services.Contracts
         // 5. Сигурно изтриване (Soft Delete) чрез промяна на флага IsDeleted
         Task DeleteDestinationAsync(int id);
 
+        // 6. Извличане на всички любими дестинации за конкретен потребител
+        Task<IEnumerable<Destination>> GetUserFavoritesAsync(string userId);
+
+        // 7. Добавяне на дестинация в любими (Моят Пътеводител)
+        Task AddToFavoritesAsync(string userId, int destinationId);
+
+        // 8. Премахване на дестинация от любими
+        Task RemoveFromFavoritesAsync(string userId, int destinationId);
+
+
     }
 }
