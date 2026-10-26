@@ -1,6 +1,7 @@
 ﻿using DestinationVerse.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DestinationVerse.Controllers
 {
@@ -94,6 +95,40 @@ namespace DestinationVerse.Controllers
 
             await destinationService.UpdateDestinationAsync(destination);
             return RedirectToAction(nameof(Index));
+        }
+
+        // 7. GET екшън: Извежда личната колекция на потребителя („Моят Пътеводител“)
+        [HttpGet]
+        public async Task<IActionResult> MyGuide()
+        {
+            // Взимаме уникалния Id идентификатор на текущо логнатия потребител по чист начин
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                            ?? throw new InvalidOperationException("Потребителят не е намерен.");
+
+            var favorites = await destinationService.GetUserFavoritesAsync(userId);
+            return View(favorites);
+        }
+
+        // 8. POST екшън: Добавя дестинация в колекцията и пренасочва обратно
+        [HttpPost]
+        public async Task<IActionResult> AddToGuide(int id)
+        {
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                            ?? throw new InvalidOperationException("Потребителят не е намерен.");
+
+            await destinationService.AddToFavoritesAsync(userId, id);
+            return RedirectToAction(nameof(MyGuide));
+        }
+
+        // 9. POST екшън: Премахва дестинация от колекцията
+        [HttpPost]
+        public async Task<IActionResult> RemoveFromGuide(int id)
+        {
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                            ?? throw new InvalidOperationException("Потребителят не е намерен.");
+
+            await destinationService.RemoveFromFavoritesAsync(userId, id);
+            return RedirectToAction(nameof(MyGuide));
         }
 
     }
