@@ -35,6 +35,7 @@ namespace DestinationVerse
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 3; // Паролата може да е само 3 символа
             })
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
 
             // 🔗 Регистрация на нашите потребителски бизнес услуги за Dependency Injection
@@ -63,7 +64,7 @@ namespace DestinationVerse
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(
